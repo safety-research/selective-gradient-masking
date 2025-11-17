@@ -1,0 +1,8 @@
+{
+  "typeCheckingMode": "off",
+  "exclude": [
+    "**/data/**",
+    "**/wandb/**",
+    "**/.git/**"
+  ]
+}

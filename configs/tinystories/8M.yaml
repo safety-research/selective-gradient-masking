@@ -1,0 +1,12 @@
+model:
+  num_layers: 6
+  hidden_size: 128
+  num_heads: 32
+  tie_weights: true
+  learning_rate: 0.0005
+  context_size: 512
+  total_steps: 3989
+  eval_steps: 10000
+  warmup_steps: 500
+  logical_batch_size: 128
+  physical_batch_size: 32
