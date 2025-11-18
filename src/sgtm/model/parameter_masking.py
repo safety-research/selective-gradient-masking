@@ -26,13 +26,12 @@ class GPTNeoMLPParameterMasking(GPTNeoMLPAbstractSGTM):
         if self.split_masked_weights:
             self.c_fc.weight_retain.grad = torch.zeros_like(self.c_fc.weight_retain.grad)
             self.c_fc.bias_retain.grad = torch.zeros_like(self.c_fc.bias_retain.grad)
-            self.c_proj.weight.grad[:, : self.retain_mlp_dim] = 0
-            self.c_proj.bias.grad = torch.zeros_like(self.c_proj.bias.grad)
         else:
             self.c_fc.weight.grad[: self.retain_mlp_dim, :] = 0
             self.c_fc.bias.grad[: self.retain_mlp_dim] = 0
-            self.c_proj.weight.grad[:, : self.retain_mlp_dim] = 0
-            self.c_proj.bias.grad = torch.zeros_like(self.c_proj.bias.grad)
+
+        self.c_proj.weight.grad[:, : self.retain_mlp_dim] = 0
+        self.c_proj.bias.grad = torch.zeros_like(self.c_proj.bias.grad)
 
     def ablate(self, trainable=False):
         with torch.no_grad():
@@ -127,14 +126,13 @@ class GPTNeoSelfAttentionParameterMasking(GPTNeoSelfAttentionAbstractSGTM):
             self.q_proj.weight_retain.grad = torch.zeros_like(self.q_proj.weight_retain.grad)
             self.k_proj.weight_retain.grad = torch.zeros_like(self.k_proj.weight_retain.grad)
             self.v_proj.weight_retain.grad = torch.zeros_like(self.v_proj.weight_retain.grad)
-            self.out_proj.weight.grad[:, :self.retain_dim] = 0
-            self.out_proj.bias.grad = torch.zeros_like(self.out_proj.bias.grad)
         else:
             self.q_proj.weight.grad[:self.retain_dim, :] = 0
             self.k_proj.weight.grad[:self.retain_dim, :] = 0
             self.v_proj.weight.grad[:self.retain_dim, :] = 0
-            self.out_proj.weight.grad[:, :self.retain_dim] = 0
-            self.out_proj.bias.grad = torch.zeros_like(self.out_proj.bias.grad)
+            
+        self.out_proj.weight.grad[:, :self.retain_dim] = 0
+        self.out_proj.bias.grad = torch.zeros_like(self.out_proj.bias.grad)
 
     def ablate(self, trainable=False):
         with torch.no_grad():

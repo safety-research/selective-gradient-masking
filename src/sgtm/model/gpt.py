@@ -51,7 +51,9 @@ def _validate_mode_parameter(sgtm_mode):
     elif sgtm_mode in ["forget", "default", "retain"]:
         return sgtm_mode
     else:
-        raise ValueError(f"Invalid sgtm mode parameter: {sgtm_mode}. Must be 'forget', 'default', 'retain', True, or False.")
+        raise ValueError(
+            f"Invalid sgtm mode parameter: {sgtm_mode}. Must be 'forget', 'default', 'retain', True, or False."
+        )
 
 
 class AttentionWrapper(nn.Module):
@@ -86,6 +88,7 @@ class GPTNeoBlockSGTM(GPTNeoBlock):
 
     def __init__(self, config, layer_id=None):
         super().__init__(config, layer_id)
+        self.config = config
         hidden_size = config.hidden_size
         inner_dim = config.intermediate_size if config.intermediate_size is not None else 4 * hidden_size
         attention_type = config.attention_layers[layer_id]
@@ -98,6 +101,16 @@ class GPTNeoBlockSGTM(GPTNeoBlock):
     def adjust_gradients(self, sgtm_mode="default"):
         self.attn.adjust_gradients(sgtm_mode)
         self.mlp.adjust_gradients(sgtm_mode)
+
+        if (
+            getattr(self.config, "sgtm_mask_embeddings", False) is True
+            and getattr(self.config, "masking_strategy") == "parameter_masking"
+            and sgtm_mode == "forget"
+        ):
+            self.ln_1.weight.grad = torch.zeros_like(self.ln_1.weight.grad )
+            self.ln_1.bias.grad = torch.zeros_like(self.ln_1.bias.grad )
+            self.ln_2.weight.grad = torch.zeros_like(self.ln_2.weight.grad )
+            self.ln_2.bias.grad = torch.zeros_like(self.ln_2.bias.grad )
 
     def ablate(self, trainable=False):
         self.attn.ablate(trainable=trainable)
@@ -312,7 +325,7 @@ class GPTNeoForCausalLMSGTM(GPTNeoForCausalLM):
 
     def ablate(self, trainable=False):
         self.transformer.ablate(trainable=trainable)
-    
+
     def forward(
         self,
         input_ids: Optional[torch.Tensor] = None,
